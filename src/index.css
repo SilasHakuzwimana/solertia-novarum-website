@@ -1,0 +1,297 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-teal: #0d9488;
+  --color-brand-blue: #007aff;
+  --color-brand-gold: #d97706;
+}
+
+@layer base {
+  body {
+    background-color: #0b132b;
+    color: #f3f4f6;
+    font-family: var(--font-sans);
+  }
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-light {
+  background: rgba(11, 19, 43, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glow-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 122, 255, 0.4);
+}
+
+.glow-btn-gold:hover {
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.45);
+}
+
+/* Admin Dashboard Styles */
+.glass-panel-dark {
+  background: rgba(9, 26, 24, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+.glow-btn {
+  box-shadow: 0 0 30px rgba(0, 122, 255, 0.15);
+}
+
+.glow-btn:hover {
+  box-shadow: 0 0 40px rgba(0, 122, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.glow-btn-gold {
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+}
+
+.glow-btn-gold:hover {
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Admin specific animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar styling for admin */
+.admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(13, 148, 136, 0.3);
+  border-radius: 3px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 148, 136, 0.5);
+}
+
+/* OTP Input Styles */
+.otp-input {
+  letter-spacing: 8px;
+  font-family: var(--font-mono);
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.password-strength.weak {
+  background: #ef4444;
+  width: 33%;
+}
+
+.password-strength.medium {
+  background: #f59e0b;
+  width: 66%;
+}
+
+.password-strength.strong {
+  background: #10b981;
+  width: 100%;
+}
+
+/* Login Screen Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-form {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Input focus glow */
+.input-glow:focus {
+  box-shadow:
+    0 0 0 3px rgba(0, 122, 255, 0.2),
+    0 0 20px rgba(0, 122, 255, 0.1);
+}
+
+/* Card hover effects */
+.dashboard-card {
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.in-review {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.completed {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  animation: slideUp 0.3s ease-out;
+}
+
+.toast.success {
+  border-color: #10b981;
+}
+
+.toast.error {
+  border-color: #ef4444;
+}
+
+.toast.info {
+  border-color: #3b82f6;
+}
+
+/* Improve focus indicators for accessibility */
+*:focus-visible {
+  outline: 2px solid #007aff;
+  outline-offset: 2px;
+}
+
+/* Ensure all text meets WCAG AA standards */
+:root {
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-on-dark: #ffffff;
+  --text-muted: #6b7280;
+}
+
+/* For dark backgrounds, ensure text is white/very light */
+.bg-dark {
+  color: #ffffff;
+}
+
+/* For interactive elements, ensure text contrast */
+button,
+a,
+input,
+select,
+textarea {
+  color: inherit;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* src/index.css */
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+/* Pause animation on hover */
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

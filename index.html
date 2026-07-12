@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Solvertia Novarum Ltd — Enterprise Technology Solutions &amp; Training
+      Academy
+    </title>
+    <link rel="icon" type="image/svg+xml" href="/webiconlogo.png" />
+    <script>
+      // Fix platform/iframe issue where window.fetch has only a getter and throws errors when overridden
+      (function () {
+        try {
+          const originalFetch = window.fetch;
+          let currentFetch = originalFetch;
+          Object.defineProperty(window, "fetch", {
+            get() {
+              return currentFetch;
+            },
+            set(value) {
+              currentFetch = value;
+            },
+            configurable: true,
+            enumerable: true,
+          });
+        } catch (e) {
+          console.warn("Failed to patch window.fetch getter/setter:", e);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
