@@ -242,7 +242,8 @@ export async function initDatabase(): Promise<void> {
     );
 
     if (adminCheck.rows.length === 0) {
-      const defaultPasswordHash = "$2b$10$YourHashedPasswordHere";
+      const defaultPasswordHash =
+        "$2a$10$aoXMM70Y1AtxYosOM57ZaudiyuU2gNeRSCFtLKpsgWPmVfgcfW0J6";
 
       await client.query(
         `
