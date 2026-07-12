@@ -357,3 +357,36 @@ export const OFFICE_LOCATIONS = [
     email: "kigali.office@solvertianovarum.com",
   },
 ];
+
+export const blueprintNodes = [
+  {
+    id: "UI",
+    label: "Client Frontend (React/Wasm)",
+    desc: "Edge rendering on host device. Optimized payload cache.",
+    metrics: "9ms response",
+  },
+  {
+    id: "API",
+    label: "API Gateway & Router (Java/Python)",
+    desc: "Validates security tokens and maps load channels.",
+    metrics: "4ms routing",
+  },
+  {
+    id: "Engine",
+    label: "Core Processing Engine",
+    desc: "Calculates intelligent regressions & micro-telemetry.",
+    metrics: "12ms computation",
+  },
+  {
+    id: "Database",
+    label: "Durable Postgres SQL Cluster",
+    desc: "Redundant, globally isolated tables with real-time replication.",
+    metrics: "5ms isolation",
+  },
+  {
+    id: "Hardware",
+    label: "IoT Controller / Bare-metal Host",
+    desc: "Embedded interfaces connecting hardware terminals directly.",
+    metrics: "2ms socket",
+  },
+];

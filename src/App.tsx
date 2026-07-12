@@ -1,5 +1,6 @@
 import AdminDashboard from "./components/AdminDashboard";
 import React, { useState, useEffect } from "react";
+import { blueprintNodes } from "./data";
 import {
   usePartnerships,
   useApplications,
@@ -460,40 +461,6 @@ export default function App() {
     }
   };
 
-  // Helper for blueprint nodes
-  const blueprintNodes = [
-    {
-      id: "UI",
-      label: "Client Frontend (React/Wasm)",
-      desc: "Edge rendering on host device. Optimized payload cache.",
-      metrics: "9ms response",
-    },
-    {
-      id: "API",
-      label: "API Gateway & Router (Java/Python)",
-      desc: "Validates security tokens and maps load channels.",
-      metrics: "4ms routing",
-    },
-    {
-      id: "Engine",
-      label: "Core Processing Engine",
-      desc: "Calculates intelligent regressions & micro-telemetry.",
-      metrics: "12ms computation",
-    },
-    {
-      id: "Database",
-      label: "Durable Postgres SQL Cluster",
-      desc: "Redundant, globally isolated tables with real-time replication.",
-      metrics: "5ms isolation",
-    },
-    {
-      id: "Hardware",
-      label: "IoT Controller / Bare-metal Host",
-      desc: "Embedded interfaces connecting hardware terminals directly.",
-      metrics: "2ms socket",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-[#f3f9f8] text-slate-800 font-sans selection:bg-[#007aff]/30 selection:text-white relative overflow-hidden">
       {/* Dynamic Background Mesh Grid */}
@@ -553,7 +520,7 @@ export default function App() {
 
             {/* Desktop Navigation Links */}
             <nav
-              className="hidden lg:flex items-center gap-8 text-sm font-bold"
+              className="hidden lg:flex items-center gap-6clea text-sm font-bold"
               aria-label="Global navigation menu"
             >
               <a
