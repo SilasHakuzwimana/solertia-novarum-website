@@ -1,41 +1,23 @@
-# Build stage
-FROM node:22-slim AS builder
+# Dockerfile
+FROM node:22-slim
+
+# Install pnpm globally
+RUN npm install -g pnpm
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy package files and npm config
+# Copy package files
 COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install dependencies (will use .npmrc for config)
-RUN pnpm install --frozen-lockfile
+# Install dependencies with build scripts allowed
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Copy source
+# Copy source code
 COPY . .
 
 # Build the application
 RUN pnpm run build
 
-# Production stage
-FROM node:22-slim AS runner
+EXPOSE 3004
 
-WORKDIR /app
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy .npmrc
-COPY .npmrc ./
-
-# Copy built assets and dependencies
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-
-# Expose port
-EXPOSE 3000
-
-# Start the server
-CMD ["pnpm", "start"]
+CMD ["node", "dist/server.js"]
