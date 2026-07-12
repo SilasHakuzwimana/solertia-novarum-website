@@ -49,6 +49,7 @@ This full-stack platform serves as the official corporate website and admin dash
 - **JSPDF, XLSX** for reports
 
 ## 🏗️ Architecture
+```bash
 .
 ├── App.tsx
 ├── admin.tsx
@@ -105,7 +106,7 @@ This full-stack platform serves as the official corporate website and admin dash
 │   ├── otp.service.ts
 │   └── reporting.service.ts
 └── types.ts
-
+```
 
 ## 🚀 Getting Started
 
