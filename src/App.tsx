@@ -520,7 +520,7 @@ export default function App() {
 
             {/* Desktop Navigation Links */}
             <nav
-              className="hidden lg:flex items-center gap-6clea text-sm font-bold"
+              className="hidden lg:flex items-center gap-6 text-sm font-bold"
               aria-label="Global navigation menu"
             >
               <a
