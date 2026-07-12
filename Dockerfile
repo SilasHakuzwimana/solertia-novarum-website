@@ -1,23 +1,25 @@
 # Dockerfile
 FROM node:22-slim
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Install pnpm and tsx globally
+RUN npm install -g pnpm tsx
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install dependencies with build scripts allowed
+# Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build frontend (for production)
 RUN pnpm run build
 
+# Expose port
 EXPOSE 3004
 
-CMD ["node", "dist/server.js"]
+# Start the server with tsx
+CMD ["pnpm", "exec", "tsx", "server.ts"]
