@@ -23,7 +23,7 @@ const PORT: number = 3004;
 app.use(express.json());
 
 // CORS for development
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "production") {
   app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(
@@ -533,14 +533,18 @@ async function startServer() {
   // Initialize Database in background
   initDatabase();
 
-  if (process.env.NODE_ENV !== "production") {
+  const distPath = path.join(process.cwd(), "dist");
+  const isDev = process.env.NODE_ENV === "development";
+
+  if (isDev) {
+    console.log("🚀 Development mode - using Vite middleware");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    console.log("🚀 Production mode - serving static files");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
@@ -552,6 +556,7 @@ async function startServer() {
     console.log(
       `[Admin] Dashboard available at http://localhost:${PORT}/admin`,
     );
+    console.log(`[Mode] ${isDev ? "Development" : "Production"}`);
   });
 }
 
