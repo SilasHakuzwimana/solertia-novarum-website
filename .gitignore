@@ -8,3 +8,6 @@ coverage/
 !.env.example
 .env.example
 docker-compose.yml
+
+pnpm-lock.yaml
+pnpm-workspace.yaml

@@ -48,6 +48,9 @@ This full-stack platform serves as the official corporate website and admin dash
 - **Nodemailer** for emails
 - **JSPDF, XLSX** for reports
 
+## Note: 
+Dependency version can be viewed from 'package.json' file.
+
 ## 🏗️ Architecture
 ```bash
 .
@@ -163,64 +166,66 @@ docker exec solertia-backend node db/migrate.js
 ### 📦 Key Features
 
 ## Admin Dashboard
-
+```bash
 ✅ Secure authentication with OTP
 ✅ Partnership and application CRUD
 ✅ Dynamic announcement system
 ✅ Multi-format report generation
 ✅ Email notifications
 ✅ Audit logging
-
+```
 ## Public Website
-
+```bash
 ✅ Responsive corporate design
 ✅ Interactive service showcase
 ✅ Virtual internship tracks
 ✅ Training program explorer
 ✅ Partnership inquiry form
 ✅ Real-time SLA estimator
-
+```
 ## 🔒 Security
 
-JWT-based authentication
-OTP verification for admin access
-Password hashing with bcrypt
-CORS configuration
-Rate limiting
-
-Secure session management
+- JWT-based authentication
+- OTP verification for admin access
+- Password hashing with bcrypt
+- CORS configuration
+- Rate limiting
+- Secure session management
 
 ## 📊 Reporting
 
 The platform supports report generation in:
 
-PDF - Professional document format
-Excel - Spreadsheet format
-CSV - Data export format
-Word - Document format
+- PDF - Professional document format
+- Excel - Spreadsheet format
+- CSV - Data export format
+- Word - Document format
 
 ## 🐳 Docker Support
 
 The project includes Docker configuration for:
 
-PostgreSQL database
-Node.js backend
-Auto-migrations on startup
+- PostgreSQL database
+- Node.js backend
+- Auto-migrations on startup
 
 ## 🤝 Contributing
 
-Fork the repository
-Create your feature branch (git checkout -b feature/amazing-feature)
-Commit your changes (git commit -m 'Add amazing feature')
-Push to the branch (git push origin feature/amazing-feature)
-Open a Pull Request
+- Fork the repository
+- Create your feature branch (git checkout -b feature/amazing-feature)
+- Commit your changes (git commit -m 'Add amazing feature')
+- Push to the branch (git push origin feature/amazing-feature)
+- Open a Pull Request
 
 ## 📝 License
 Copyright © 2026 Solertia Novarum Ltd. All rights reserved.
 
 # 📬 Contact
+
+```bash
 Website: solertianovarum.com
 Email: enquiry@solertianovarum.com
 Location: Bugesera, Mareba & KN 2 Avenue, Kigali, Rwanda
+```
 
 Built with ❤️ by the Solertia Novarum Team
