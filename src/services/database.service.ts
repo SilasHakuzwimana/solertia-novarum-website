@@ -1,4 +1,3 @@
-// src/services/database.service.ts
 import pg from "pg";
 import dotenv from "dotenv";
 
@@ -13,10 +12,10 @@ export const inMemoryApplications: any[] = [];
 
 export const inMemoryAdminUsers: any[] = [
   {
-    id: 1,
-    username: "admin",
-    email: "hakuzwisilas@gmail.com",
-    password: "solvertia2026",
+    id: process.env.ADMIN_ID,
+    username: process.env.ADMIN_USERNAME,
+    email: process.env.ADMIN_EMAIL,
+    password: process.env.ADMIN_PASSWORD,
     is_verified: true,
     is_active: true,
     created_at: new Date().toISOString(),
@@ -43,9 +42,7 @@ export const inMemoryAnnouncements: any[] = [
 
 export function getDbPool() {
   if (!pool) {
-    const connectionString =
-      process.env.DATABASE_URL ||
-      "postgresql://postgres:postgres@localhost:5432/solvertia_db";
+    const connectionString = process.env.DATABASE_URL;
     pool = new pg.Pool({
       connectionString,
       connectionTimeoutMillis: 5000,
@@ -86,6 +83,21 @@ export async function initDatabase(): Promise<void> {
       );
     `);
     console.log("✅ Admin users table verified/created.");
+
+    // 1.1 Admin Users Indexes
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_username ON admin_users(username);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_is_active ON admin_users(is_active);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_is_verified ON admin_users(is_verified);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_active_verified ON admin_users(is_active, is_verified);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_last_login ON admin_users(last_login);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_created_at ON admin_users(created_at);
+      CREATE INDEX IF NOT EXISTS idx_admin_users_active_verified_lookup 
+      ON admin_users(email) 
+      WHERE is_active = true AND is_verified = true;
+    `);
+    console.log("✅ Admin users indexes created.");
 
     // 2. Admin OTP Table
     await client.query(`

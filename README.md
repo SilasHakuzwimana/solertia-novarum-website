@@ -6,15 +6,15 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 
-## 🏢 About Solertia Novarum Ltd
+## About Solertia Novarum Ltd
 
 Solertia Novarum Ltd is a global technology integration partner specializing in enterprise systems, cross-platform applications, AI pipelines, and IoT frameworks. We empower organizations with high-availability digital infrastructures while training the next generation of software engineers.
 
-## 📋 Project Overview
+## Project Overview
 
 This full-stack platform serves as the official corporate website and admin dashboard for Solertia Novarum Ltd, featuring:
 
-### 🌐 Public Website
+### Public Website
 - Corporate landing page with dynamic announcement system
 - Enterprise technology services showcase
 - Virtual internship pipeline (SOD & NIT tracks)
@@ -22,7 +22,7 @@ This full-stack platform serves as the official corporate website and admin dash
 - Partnership inquiry portal
 - Real-time SLA estimation
 
-### 🔐 Admin Dashboard
+### Admin Dashboard
 - Secure authentication with OTP verification
 - Partnership and application management
 - Dynamic announcement editor
@@ -30,7 +30,7 @@ This full-stack platform serves as the official corporate website and admin dash
 - Email notification system
 - Analytics and statistics dashboard
 
-## 🚀 Tech Stack
+##Tech S tack
 
 ### Frontend
 - **React 19** with Hooks
@@ -51,7 +51,7 @@ This full-stack platform serves as the official corporate website and admin dash
 ## Note: 
 Dependency version can be viewed from 'package.json' file.
 
-## 🏗️ Architecture
+## Architecture
 ```bash
 .
 ├── App.tsx
@@ -111,7 +111,7 @@ Dependency version can be viewed from 'package.json' file.
 └── types.ts
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 20+
@@ -163,7 +163,7 @@ docker-compose up -d
 ```bash
 docker exec solertia-backend node db/migrate.js
 ```
-### 📦 Key Features
+### Key Features
 
 ## Admin Dashboard
 ```bash
@@ -183,7 +183,7 @@ docker exec solertia-backend node db/migrate.js
 ✅ Partnership inquiry form
 ✅ Real-time SLA estimator
 ```
-## 🔒 Security
+## Security
 
 - JWT-based authentication
 - OTP verification for admin access
@@ -192,7 +192,7 @@ docker exec solertia-backend node db/migrate.js
 - Rate limiting
 - Secure session management
 
-## 📊 Reporting
+## Reporting
 
 The platform supports report generation in:
 
@@ -201,7 +201,7 @@ The platform supports report generation in:
 - CSV - Data export format
 - Word - Document format
 
-## 🐳 Docker Support
+## Docker Support
 
 The project includes Docker configuration for:
 
@@ -209,7 +209,7 @@ The project includes Docker configuration for:
 - Node.js backend
 - Auto-migrations on startup
 
-## 🤝 Contributing
+## Contributing
 
 - Fork the repository
 - Create your feature branch (git checkout -b feature/amazing-feature)
@@ -217,10 +217,10 @@ The project includes Docker configuration for:
 - Push to the branch (git push origin feature/amazing-feature)
 - Open a Pull Request
 
-## 📝 License
+## License
 Copyright © 2026 Solertia Novarum Ltd. All rights reserved.
 
-# 📬 Contact
+# Contact
 
 ```bash
 Website: solertianovarum.com
@@ -228,4 +228,4 @@ Email: enquiry@solertianovarum.com
 Location: Bugesera, Mareba & KN 2 Avenue, Kigali, Rwanda
 ```
 
-Built with ❤️ by the Solertia Novarum Team
+Built with professionalism by the Solertia Novarum Team

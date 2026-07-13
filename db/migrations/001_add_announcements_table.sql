@@ -1,4 +1,3 @@
--- server/db/migrations/001_add_announcements_table.sql
 CREATE TABLE IF NOT EXISTS announcements (
     id SERIAL PRIMARY KEY,
     text TEXT NOT NULL,
