@@ -7,12 +7,21 @@ export interface APIConfig {
   headers?: Record<string, string>;
 }
 
-// API Response Types
+// API Response Types - Updated to be more flexible
 export interface APIResponse<T = any> {
   data?: T;
   error?: string;
   message?: string;
   status: number;
+  success: boolean;
+  // Optional properties for specific responses
+  loginToken?: string;
+  valid?: boolean;
+  resetToken?: string;
+  token?: string;
+  user?: any;
+  email?: string;
+  expiresIn?: number;
 }
 
 // Health Check Response
@@ -81,6 +90,7 @@ class APIClient {
       return {
         data: data,
         status: response.status,
+        success: response.ok,
         ...(response.ok ? {} : { error: data.error || "Request failed" }),
       };
     } catch (error: any) {
@@ -90,12 +100,14 @@ class APIClient {
         return {
           status: 408,
           error: "Request timeout - server took too long to respond",
+          success: false,
         };
       }
 
       return {
         status: 500,
         error: error.message || "Network error occurred",
+        success: false,
       };
     }
   }
@@ -205,6 +217,7 @@ class APIClient {
     return {
       status: hasError ? 500 : 200,
       data: results,
+      success: !hasError,
       ...(hasError ? { error: errorMessage } : {}),
     };
   }

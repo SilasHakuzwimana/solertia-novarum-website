@@ -8,13 +8,17 @@ import { DataTable } from "./dashboard/DataTable";
 import ReportingPanel from "./ReportingPanel";
 import { AuthService } from "../api/auth.service";
 import { AdminService } from "../api/admin.service";
-import { Partnership, Application, DashboardStats } from "../types";
+import {
+  Partnership,
+  Application,
+  DashboardStats,
+  RegisterData,
+} from "../types";
 import ReplyModal from "./dashboard/ReplyModal";
 import ConfirmationModal from "./dashboard/ConfirmationModal";
 import AnnouncementEditor from "./dashboard/AnnouncementEditor";
 import { useAnnouncement } from "../api";
-
-type LoginStep = "login" | "otp" | "forgot-password" | "reset-password";
+import { LoginStep } from "../types";
 
 // Tab definitions
 const TABS = [
@@ -63,6 +67,10 @@ const AdminDashboard: React.FC = () => {
 
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReporting, setShowReporting] = useState(false);
+  const [announcementLoading, setAnnouncementLoading] = useState(false);
+  const [announcementError, setAnnouncementError] = useState<string | null>(
+    null,
+  );
 
   // ==============================================
   // LOGIN STATE
@@ -87,6 +95,46 @@ const AdminDashboard: React.FC = () => {
     "partnership" | "application" | null
   >(null);
 
+  //==========
+  // REGISTER
+  //==========
+  const [registerError, setRegisterError] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState("");
+
+  const handleRegister = async (data: RegisterData) => {
+    setRegisterError("");
+    setRegisterSuccess("");
+    setLoading(true);
+
+    try {
+      const username = data.full_name;
+      const response = await AuthService.register({
+        full_name: data.full_name,
+        username: username,
+        email: data.email,
+        phone_number: data.phone_number,
+        password: data.password,
+        confirm_password: data.confirm_password || data.password,
+      });
+
+      if (response.success) {
+        setRegisterSuccess(
+          "Registration successful! Please check your email for verification OTP.",
+        );
+        setTimeout(() => {
+          setLoginStep("verify-email");
+          setLoginEmail(data.email);
+        }, 3000);
+      } else {
+        setRegisterError(response.error || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setRegisterError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
   // ==============================================
   // LIFECYCLE EFFECTS
   // ==============================================
@@ -105,6 +153,15 @@ const AdminDashboard: React.FC = () => {
       }
     } else {
       setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get("email");
+    if (emailParam) {
+      setLoginEmail(emailParam);
+      setLoginError("");
     }
   }, []);
 
@@ -132,7 +189,11 @@ const AdminDashboard: React.FC = () => {
   const checkAuth = async (token: string) => {
     try {
       const response = await AuthService.checkSession(token);
-      if (response.status === 200 && response.data?.success) {
+      if (
+        response.data?.status === 200 &&
+        response.data &&
+        response.data.success
+      ) {
         setIsAuthenticated(true);
         await fetchDashboardData(token);
       } else {
@@ -155,12 +216,25 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       const response = await AuthService.login(email, password);
+
       if (response.status === 200 && response.data?.success) {
         setLoginStep("otp");
         setLoginToken(response.data.loginToken);
         setEmail(response.data.email);
         setOtpTimer(response.data.expiresIn || 600);
         setCanResendOTP(false);
+      } else if (
+        response.status === 403 &&
+        response.data?.requiresVerification
+      ) {
+        // Account not verified - redirect to verification
+        setLoginError(
+          response.data?.error ||
+            "Account not verified. Please verify your email.",
+        );
+        setTimeout(() => {
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+        }, 2000);
       } else {
         setLoginError(response.data?.error || "Invalid credentials");
       }
@@ -219,11 +293,7 @@ const AdminDashboard: React.FC = () => {
     setResetError("");
     setLoading(true);
     try {
-      console.log("📤 AdminDashboard - Requesting password reset for:", email);
-
       const response = await AuthService.forgotPassword(email);
-
-      console.log("✅ AdminDashboard - API Response:", response.data);
 
       if (response.status === 200 && response.data?.success) {
         const resetToken = response.data.resetToken;
@@ -240,18 +310,6 @@ const AdminDashboard: React.FC = () => {
 
         setResetToken(resetToken);
         setResetEmail(resetEmail);
-
-        console.log("💾 AdminDashboard - Token saved to localStorage:", {
-          token: resetToken.substring(0, 20) + "...",
-          email: resetEmail,
-          expiresIn: expiresIn,
-        });
-
-        const savedToken = localStorage.getItem("resetToken");
-        console.log(
-          "🔍 AdminDashboard - Verification - Token in localStorage:",
-          savedToken ? "✅ Present" : "❌ Missing",
-        );
 
         setLoginStep("reset-password");
         setEmail(email);
@@ -293,13 +351,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const resetToken = localStorage.getItem("resetToken");
       const resetEmail = localStorage.getItem("resetEmail");
-
-      console.log("📤 AdminDashboard - Resetting password with:", {
-        hasToken: !!resetToken,
-        hasEmail: !!resetEmail,
-        otp: otp,
-      });
-
+      
       if (!resetToken || !resetEmail) {
         setResetError("Reset session expired. Please request a new reset.");
         setLoading(false);
@@ -508,12 +560,22 @@ const AdminDashboard: React.FC = () => {
   };
 
   const refreshAnnouncement = useCallback(async () => {
-    await fetchAnnouncement(auth?.token);
+    if (auth?.token) {
+      setAnnouncementLoading(true);
+      setAnnouncementError(null);
+      try {
+        await fetchAnnouncement(auth.token);
+      } catch (err) {
+        setAnnouncementError("Failed to load announcement");
+      } finally {
+        setAnnouncementLoading(false);
+      }
+    }
   }, [fetchAnnouncement, auth?.token]);
 
   useEffect(() => {
     if (isAuthenticated && auth?.token) {
-      fetchAnnouncement(auth.token);
+      refreshAnnouncement();
     }
   }, [isAuthenticated, auth?.token]);
 
@@ -527,6 +589,7 @@ const AdminDashboard: React.FC = () => {
         step={loginStep}
         loading={loading}
         loginError={loginError}
+        loginEmail={loginEmail}
         otpError={otpError}
         resetError={resetError}
         email={email}
@@ -540,6 +603,9 @@ const AdminDashboard: React.FC = () => {
         onResetPassword={handleResetPassword}
         onBackToLogin={handleBackToLogin}
         onGoToForgotPassword={handleGoToForgotPassword}
+        onRegister={handleRegister}
+        registerError={registerError}
+        registerSuccess={registerSuccess}
       />
     );
   }

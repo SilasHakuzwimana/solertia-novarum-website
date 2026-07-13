@@ -1,17 +1,12 @@
+// src/components/dashboard/ForgotPassword.tsx
 import React, { useState } from "react";
-import { AlertTriangle, Check } from "lucide-react";
-import axios from "axios";
-
-interface ForgotPasswordProps {
-  loading: boolean;
-  error: string;
-  onReset: (email: string) => Promise<void>;
-  onBack: () => void;
-}
+import { AlertTriangle, Check, Loader2, ArrowLeft } from "lucide-react";
+import { apiClient } from "../../api/client";
+import { ForgotPasswordProps } from "@/src/types";
 
 export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
-  loading,
-  error,
+  loading: externalLoading,
+  error: externalError,
   onReset,
   onBack,
 }) => {
@@ -19,8 +14,9 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   const [emailError, setEmailError] = useState("");
   const [success, setSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  // Email validation
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
@@ -54,41 +50,45 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
       await onReset(email);
       setSuccess(true);
       setSuccessMessage("Password reset OTP has been sent to your email.");
-    } catch (err) {
-      console.error("Reset request failed:", err);
+    } catch (err: any) {
+      setLocalError(err.message || "Failed to send reset email");
     }
   };
 
-  // Handle resend OTP
   const handleResendOTP = async () => {
+    setResendLoading(true);
+    setLocalError("");
+
     try {
-      const resetToken = localStorage.getItem("resetToken");
-      const storedEmail = localStorage.getItem("resetEmail");
+      const storedEmail = localStorage.getItem("resetEmail") || email;
 
-      if (!resetToken || !storedEmail) {
-        await onReset(email);
-        setSuccessMessage("A new OTP has been sent to your email.");
-        return;
-      }
-
-      const response = await axios.post(
+      const response = await apiClient.fetchWithTimeout(
         "/api/auth/resend-otp",
         {
-          email: storedEmail,
-          resetToken,
+          method: "POST",
+          body: JSON.stringify({ email: storedEmail }),
         },
-        { withCredentials: true },
       );
 
-      if (response.data.success) {
+      const responseData = response.data as any;
+
+      if (response.status === 200 && responseData?.success) {
         setSuccessMessage("A new OTP has been sent to your email.");
         setSuccess(true);
+        if (responseData?.loginToken) {
+          localStorage.setItem("resetToken", responseData.loginToken);
+        }
+      } else {
+        setLocalError(responseData?.error || "Failed to resend OTP");
       }
-    } catch (err) {
-      console.error("Failed to resend OTP:", err);
-      await onReset(email);
+    } catch (err: any) {
+      setLocalError(err.message || "Failed to resend OTP");
+    } finally {
+      setResendLoading(false);
     }
   };
+
+  const displayError = localError || externalError;
 
   if (success) {
     return (
@@ -109,9 +109,17 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
           <button
             type="button"
             onClick={handleResendOTP}
-            className="flex-1 bg-[#007aff] hover:bg-[#0055b3] text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+            disabled={resendLoading}
+            className="flex-1 bg-[#007aff] hover:bg-[#0055b3] text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Resend OTP
+            {resendLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sending...
+              </span>
+            ) : (
+              "Resend OTP"
+            )}
           </button>
           <button
             type="button"
@@ -141,7 +149,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
           placeholder="admin@example.com"
           required
           autoFocus
-          disabled={loading}
+          disabled={externalLoading}
         />
         {emailError && (
           <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
@@ -165,12 +173,12 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
         </div>
       )}
 
-      {error && (
+      {displayError && (
         <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
-            <p>{error}</p>
-            {error.includes("not found") && (
+            <p>{displayError}</p>
+            {displayError.includes("not found") && (
               <p className="text-xs opacity-80 mt-1">
                 Please make sure you're using the correct email address.
               </p>
@@ -181,27 +189,12 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 
       <button
         type="submit"
-        disabled={loading || !email}
+        disabled={externalLoading || !email}
         className="w-full bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? (
+        {externalLoading ? (
           <span className="flex items-center justify-center gap-2">
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
+            <Loader2 className="w-4 h-4 animate-spin" />
             Sending OTP...
           </span>
         ) : (
@@ -221,9 +214,10 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-sm text-teal-400 hover:text-teal-300 transition-colors"
+        className="w-full text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center justify-center gap-1"
       >
-        ← Back to Login
+        <ArrowLeft className="w-4 h-4" />
+        Back to Login
       </button>
     </form>
   );

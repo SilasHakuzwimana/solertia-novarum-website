@@ -4,31 +4,8 @@ import { LoginForm } from "./LoginForm";
 import { OTPVerification } from "./OTPVerification";
 import { ForgotPassword } from "./ForgotPassword";
 import { ResetPassword } from "./ResetPassword";
-
-type LoginStep = "login" | "otp" | "forgot-password" | "reset-password";
-
-interface AuthScreenProps {
-  step: LoginStep;
-  loading: boolean;
-  loginError: string;
-  otpError: string;
-  resetError: string;
-  email: string;
-  otpTimer: number;
-  canResendOTP: boolean;
-  resetSuccess: boolean;
-  onLogin: (email: string, password: string) => Promise<void>;
-  onVerifyOTP: (otp: string) => Promise<void>;
-  onResendOTP: () => Promise<void>;
-  onForgotPassword: (email: string) => Promise<void>;
-  onResetPassword: (
-    otp: string,
-    newPassword: string,
-    confirmPassword: string,
-  ) => Promise<void>;
-  onBackToLogin: () => void;
-  onGoToForgotPassword: () => void;
-}
+import { AuthScreenProps } from "@/src/types";
+import VerifyEmail from "./VerifyEmail";
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({
   step,
@@ -37,6 +14,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   otpError,
   resetError,
   email,
+  loginEmail,
   otpTimer,
   canResendOTP,
   resetSuccess,
@@ -47,6 +25,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onResetPassword,
   onBackToLogin,
   onGoToForgotPassword,
+  onRegister,
+  registerError,
+  registerSuccess,
 }) => {
   const getStepTitle = () => {
     switch (step) {
@@ -58,8 +39,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         return "Reset your password";
       case "reset-password":
         return "Create new password";
+      case "verify-email":
+        return "Verify your email address"; // ✅ Add this
     }
   };
+
+  // ✅ If verify-email step, render VerifyEmail component
+  if (step === "verify-email") {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-[#072421] via-[#0d2e29] to-[#123832] flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <VerifyEmail />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-[#072421] via-[#0d2e29] to-[#123832] flex items-center justify-center p-4">
@@ -78,6 +72,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             onForgotPassword={onGoToForgotPassword}
             loading={loading}
             error={loginError}
+            registerError={registerError}
+            registerSuccess={registerSuccess}
+            initialEmail={loginEmail}
           />
         )}
 

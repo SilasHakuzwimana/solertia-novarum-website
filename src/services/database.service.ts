@@ -23,8 +23,14 @@ export const inMemoryAdminUsers: any[] = [
   },
 ];
 
-export const inMemoryOTPs: Map<string, { otp: string; expires: Date }> =
-  new Map();
+export const inMemoryOTPs = new Map<
+  string,
+  {
+    otp: string;
+    expires: Date;
+    type?: "verification" | "login" | "password_reset" | "email_change";
+  }
+>();
 export const inMemoryAnnouncements: any[] = [
   {
     id: 1,

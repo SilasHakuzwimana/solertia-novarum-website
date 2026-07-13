@@ -1,9 +1,14 @@
 import { Router } from "express";
 import AuthController from "../controllers/auth.controller";
 import PasswordController from "../controllers/password.controller";
+
 const router = Router();
 
-// Public auth routes
+// ============================================
+// PUBLIC AUTH ROUTES
+// ============================================
+
+// Auth routes
 router.post("/register", AuthController.register);
 router.post("/verify-email", AuthController.verifyEmail);
 router.post("/resend-verification", AuthController.resendVerificationOTP);
@@ -13,8 +18,13 @@ router.post("/resend-otp", AuthController.resendOTP);
 router.post("/logout", AuthController.logout);
 router.get("/check", AuthController.checkSession);
 
-export default router;
+// ============================================
+// PASSWORD RESET ROUTES
+// ============================================
 
-// Password reset routes
 router.post("/forgot-password", PasswordController.requestReset);
 router.post("/reset-password", PasswordController.resetPassword);
+router.get("/validate-token", PasswordController.validateResetToken);
+router.post("/resend-reset-otp", PasswordController.resendOTP);
+
+export default router;

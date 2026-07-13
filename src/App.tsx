@@ -1,6 +1,14 @@
 import AdminDashboard from "./components/AdminDashboard";
 import React, { useState, useEffect } from "react";
 import { blueprintNodes } from "./data";
+import VerifyEmail from "./components/dashboard/VerifyEmail";
+import Register from "./components/dashboard/Register";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
 import {
   usePartnerships,
   useApplications,
@@ -166,6 +174,25 @@ export function SolertiaLogo({
 }
 
 export default function App() {
+  const isAdminRoute = window.location.pathname === "/admin";
+  if (isAdminRoute) {
+    return <AdminDashboard />;
+  }
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/admin" element={<AdminDashboard />}></Route>
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<MainApp />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function MainApp() {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState<string>("all");
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -187,6 +214,15 @@ export default function App() {
   if (isAdminRoute) {
     return <AdminDashboard />;
   }
+  const isVerifyEmailRoute = window.location.pathname === "/verify-email";
+  if (isVerifyEmailRoute) {
+    return <VerifyEmail />;
+  }
+  const isRegisterRoute = window.location.pathname === "/register";
+  if (isRegisterRoute) {
+    return <Register />;
+  }
+
   // Live Partnership Quote Builder States
   const [partnershipRequest, setPartnershipRequest] =
     useState<PartnershipRequest>({

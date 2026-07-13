@@ -10,7 +10,7 @@ import OTPService from "../services/otp.service";
 import EmailService from "../services/email.service";
 import crypto from "crypto";
 
-// In-memory store for reset tokens (in production, use Redis or database)
+// In-memory store for reset tokens (in production)
 const resetTokens = new Map<
   string,
   {
@@ -225,35 +225,41 @@ export class PasswordController {
   // Validate reset token
   static async validateResetToken(req: Request, res: Response) {
     try {
-      const resetToken = req.cookies?.resetToken || req.query.token;
+      const resetToken = req.query.token || req.cookies?.resetToken;
 
       if (!resetToken) {
         return res.status(400).json({
           success: false,
           error: "Reset token required",
+          valid: false,
         });
       }
 
-      const tokenData = resetTokens.get(resetToken);
+      const tokenData = resetTokens.get(resetToken as string);
 
       if (!tokenData) {
+        console.log("❌ Token not found in store");
         return res.status(401).json({
           success: false,
           error: "Invalid reset token",
+          valid: false,
         });
       }
 
       if (Date.now() > tokenData.expiresAt) {
-        resetTokens.delete(resetToken);
+        resetTokens.delete(resetToken as string);
+        console.log("❌ Token expired");
         return res.status(401).json({
           success: false,
           error: "Reset token has expired",
+          valid: false,
         });
       }
 
       return res.json({
         success: true,
         message: "Reset token is valid",
+        valid: true,
         email: tokenData.email,
         expiresIn: Math.floor((tokenData.expiresAt - Date.now()) / 1000),
       });
@@ -262,6 +268,7 @@ export class PasswordController {
       return res.status(500).json({
         success: false,
         error: "Failed to validate reset token",
+        valid: false,
       });
     }
   }
@@ -319,7 +326,10 @@ export class PasswordController {
       }
 
       // Send new OTP
-      const otpResult = await OTPService.sendOTP(email, user.username);
+      const otpResult = await OTPService.sendPasswordResetOTP(
+        email,
+        user.username,
+      );
 
       if (!otpResult.success) {
         return res.status(500).json({

@@ -8,10 +8,8 @@ const COMPANY_DOMAIN = "solertianovarum.com";
 const SUPPORT_EMAIL = process.env.EMAIL_SUPPORT || `support@${COMPANY_DOMAIN}`;
 const DASHBOARD_URL =
   process.env.ADMIN_DASHBOARD_URL || "http://localhost:3004/admin";
+const LOGIN_URL = process.env.ADMIN_LOGIN_URL || `${DASHBOARD_URL}/login`;
 
-// Required credentials must come from environment variables.
-// No secrets are hardcoded — if these are missing, sending fails loudly
-// instead of silently falling back to a committed credential.
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
@@ -31,16 +29,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// const DEFAULT_FROM =
-//   process.env.EMAIL_FROM || `"${COMPANY_NAME}" <admin@${COMPANY_DOMAIN}>`;
+const DEFAULT_FROM =
+  process.env.EMAIL_FROM || `"${COMPANY_NAME}" <admin@${COMPANY_DOMAIN}>`;
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || "hakusilas@gmail.com";
-
-/**
- * Shared design tokens and layout for all outgoing emails.
- * Keeping this in one place means every email inherits the same
- * brand look, and a palette/copy change only has to happen once.
- */
 const palette = {
   ink: "#0d2e29",
   deep: "#072421",
@@ -53,6 +44,9 @@ const palette = {
   success: "#1b8a5a",
   successBg: "#e9f7f0",
   successBorder: "#1b8a5a",
+  warn: "#b45309",
+  warnBg: "#fef6ec",
+  warnBorder: "#e3a04c",
 };
 
 function renderLayout(opts: {
@@ -186,7 +180,6 @@ function renderLayout(opts: {
     <div class="container">
       <div class="header">
         <div class="brand">
-          <span class="brand-mark">SN</span>
           <span class="brand-name">${COMPANY_NAME}</span>
         </div>
         <p class="eyebrow">${eyebrow}</p>
@@ -206,45 +199,22 @@ function renderLayout(opts: {
 </html>`;
 }
 
+/** Shared OTP code block markup used by all three OTP email variants. */
+function otpBlock(otp: string): string {
+  return `
+    <div style="background:${palette.successBg}; border:1px solid ${palette.border}; border-radius:10px; padding:20px; text-align:center; margin:24px 0;">
+      <div style="font-family:'Courier New', monospace; font-size:32px; font-weight:700; letter-spacing:10px; color:${palette.deep};">
+        ${otp}
+      </div>
+    </div>`;
+}
+
+type OtpPurpose = "verification" | "login" | "password-reset";
+
 export class EmailService {
-  static async sendOTP(
-    email: string,
-    otp: string,
-    username: string,
-  ): Promise<boolean> {
-    try {
-      const html = renderLayout({
-        eyebrow: "Admin Dashboard",
-        heading: "Verify your login",
-        preheader: `Your verification code is ${otp}`,
-        bodyHtml: `
-          <p>Hello ${username},</p>
-          <p>We received a request to access the <strong>${COMPANY_NAME}</strong> admin dashboard. Enter the code below to continue:</p>
-          <div style="background:${palette.successBg}; border:1px solid ${palette.border}; border-radius:10px; padding:20px; text-align:center; margin:24px 0;">
-            <div style="font-family:'Courier New', monospace; font-size:32px; font-weight:700; letter-spacing:10px; color:${palette.deep};">
-              ${otp}
-            </div>
-          </div>
-          <p class="muted">This code expires in 10 minutes. For your security, don't share it with anyone — our team will never ask you for it.</p>
-          <hr class="divider" />
-          <p class="muted">Didn't try to log in? You can safely ignore this email, or contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> if you're concerned about your account's security.</p>
-        `,
-      });
-
-      const info = await transporter.sendMail({
-        from: DEFAULT_FROM,
-        to: email,
-        subject: `${otp} is your ${COMPANY_NAME} verification code`,
-        html,
-      });
-      console.log("OTP email sent:", info.messageId);
-      return true;
-    } catch (error) {
-      console.error("Failed to send OTP email:", error);
-      return false;
-    }
-  }
-
+  // ---------------------------------------------------------------------
+  // 1. Registration Welcome Email
+  // ---------------------------------------------------------------------
   static async sendWelcomeEmail(
     email: string,
     username: string,
@@ -256,9 +226,8 @@ export class EmailService {
         preheader: "Your admin account is ready to go",
         bodyHtml: `
           <p>Hello ${username},</p>
-          <p>Your admin account has been verified and activated. You now have full access to the ${COMPANY_NAME} admin dashboard.</p>
+          <p>Your admin account has been created for the ${COMPANY_NAME} admin dashboard. Here's what you can do once you're verified and signed in:</p>
           <div style="background:${palette.successBg}; border-left:3px solid ${palette.successBorder}; border-radius:8px; padding:18px 20px; margin:24px 0;">
-            <p style="margin:0 0 10px; color:${palette.success}; font-weight:600; font-size:14px;">With this account, you can:</p>
             <ul style="margin:0; padding-left:18px; color:${palette.success}; font-size:14px; line-height:1.9;">
               <li>View real-time analytics and statistics</li>
               <li>Manage partnership and program applications</li>
@@ -285,6 +254,145 @@ export class EmailService {
     }
   }
 
+  // ---------------------------------------------------------------------
+  // 2. Email Verification OTP (post-registration)
+  // ---------------------------------------------------------------------
+  static async sendVerificationOTP(
+    email: string,
+    otp: string,
+    username: string,
+  ): Promise<boolean> {
+    try {
+      const html = renderLayout({
+        eyebrow: "Email Verification",
+        heading: "Confirm your email address",
+        preheader: `Your verification code is ${otp}`,
+        bodyHtml: `
+          <p>Hello ${username},</p>
+          <p>Thanks for creating an account on the <strong>${COMPANY_NAME}</strong> admin dashboard. Enter the code below to confirm this is your email address:</p>
+          ${otpBlock(otp)}
+          <p class="muted">This code expires in 10 minutes. Until you verify, your account will have limited access.</p>
+          <hr class="divider" />
+          <p class="muted">Didn't create this account? You can ignore this email, or let us know at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
+        `,
+      });
+
+      const info = await transporter.sendMail({
+        from: DEFAULT_FROM,
+        to: email,
+        subject: `${otp} is your ${COMPANY_NAME} verification code`,
+        html,
+      });
+      console.log("Verification OTP email sent:", info.messageId);
+      return true;
+    } catch (error) {
+      console.error("Failed to send verification OTP email:", error);
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // 3. Login OTP (2FA)
+  // ---------------------------------------------------------------------
+  static async sendLoginOTP(
+    email: string,
+    otp: string,
+    username: string,
+  ): Promise<boolean> {
+    try {
+      const html = renderLayout({
+        eyebrow: "Sign-in Verification",
+        heading: "Confirm it's you",
+        preheader: `Your sign-in code is ${otp}`,
+        bodyHtml: `
+          <p>Hello ${username},</p>
+          <p>We received a sign-in attempt on the <strong>${COMPANY_NAME}</strong> admin dashboard. Enter this code to complete your login:</p>
+          ${otpBlock(otp)}
+          <p class="muted">This code expires in 10 minutes. Our team will never call or email you asking for it.</p>
+          <hr class="divider" />
+          <p class="muted">Wasn't you? <br/>Change your password right away and contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
+        `,
+      });
+
+      const info = await transporter.sendMail({
+        from: DEFAULT_FROM,
+        to: email,
+        subject: `${otp} is your ${COMPANY_NAME} sign-in code`,
+        html,
+      });
+      console.log("Login OTP email sent:", info.messageId);
+      return true;
+    } catch (error) {
+      console.error("Failed to send login OTP email:", error);
+      return false;
+    }
+  }
+
+  // -----------------------
+  // 4. Password Reset OTP
+  // -----------------------
+  static async sendPasswordResetOTP(
+    email: string,
+    otp: string,
+    username: string,
+  ): Promise<boolean> {
+    try {
+      const html = renderLayout({
+        eyebrow: "Account Security",
+        heading: "Reset your password",
+        preheader: `Your password reset code is ${otp}`,
+        bodyHtml: `
+          <p>Hello ${username},</p>
+          <p>We received a request to reset the password on your <strong>${COMPANY_NAME}</strong> admin account. Use the code below to continue:</p>
+          ${otpBlock(otp)}
+          <div style="background:${palette.warnBg}; border-left:3px solid ${palette.warnBorder}; border-radius:8px; padding:14px 18px; margin:24px 0;">
+            <p style="margin:0; color:${palette.warn}; font-size:13px;">This code expires in 10 minutes. If it expires, you'll need to request a new one.</p>
+          </div>
+          <hr class="divider" />
+          <p class="muted">Didn't request this? Your password is still safe — just ignore this email, or reach out to <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> if you're concerned.</p>
+        `,
+      });
+
+      const info = await transporter.sendMail({
+        from: DEFAULT_FROM,
+        to: email,
+        subject: `${otp} is your ${COMPANY_NAME} password reset code`,
+        html,
+      });
+      console.log("Password reset OTP email sent:", info.messageId);
+      return true;
+    } catch (error) {
+      console.error("Failed to send password reset OTP email:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Backward-compatible generic OTP sender. Existing call sites
+   * (e.g. OTPService.sendOTP()) can keep calling this without changes;
+   * it just dispatches to the purpose-specific method above so each
+   * OTP email keeps getting tailored subject/copy.
+   */
+  static async sendOTP(
+    email: string,
+    otp: string,
+    username: string,
+    purpose: OtpPurpose = "verification",
+  ): Promise<boolean> {
+    switch (purpose) {
+      case "login":
+        return this.sendLoginOTP(email, otp, username);
+      case "password-reset":
+        return this.sendPasswordResetOTP(email, otp, username);
+      case "verification":
+      default:
+        return this.sendVerificationOTP(email, otp, username);
+    }
+  }
+
+  // ---------------------------------
+  // 5. Password Reset Confirmation
+  // ----------------------------------
   static async sendPasswordResetConfirmation(
     email: string,
     username: string,
@@ -303,7 +411,7 @@ export class EmailService {
           <p>If you made this change, no further action is needed.</p>
           <p class="muted">If you did not request this change, please contact us immediately at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> so we can secure your account.</p>
           <p style="text-align:center; margin:28px 0 8px;">
-            <a href="${DASHBOARD_URL}" class="button">Go to login</a>
+            <a href="${LOGIN_URL}" class="button">Go to login</a>
           </p>
         `,
       });
@@ -321,7 +429,9 @@ export class EmailService {
     }
   }
 
-  // Send report via email with attachment
+  // ---------------------------------------------------------------------
+  // 6. Report Email (Admin -> external recipient, with attachments)
+  // ---------------------------------------------------------------------
   static async sendReport(
     to: string,
     subject: string,
@@ -362,7 +472,9 @@ export class EmailService {
     }
   }
 
-  // Send reply email
+  // ---------------------------------------------------------------------
+  // 7. Reply Email (Admin -> partnership/application inquiry)
+  // ---------------------------------------------------------------------
   static async sendReply(
     to: string,
     subject: string,
@@ -370,16 +482,23 @@ export class EmailService {
     includeAttachments: boolean = false,
   ): Promise<boolean> {
     try {
-      const mailOptions = {
-        from:
-          process.env.EMAIL_FROM ||
-          '"Solvertia Novarum Admin" <hakuzwisilas@gmail.com>',
-        to: to,
-        subject: subject,
-        html: htmlContent,
-      };
+      const html = renderLayout({
+        eyebrow: "Message from our team",
+        heading: subject || `A reply from ${COMPANY_NAME}`,
+        preheader: "You have a new reply regarding your inquiry",
+        bodyHtml: `
+          <div style="font-size:15px; line-height:1.65; color:${palette.ink};">
+            ${htmlContent}
+          </div>
+        `,
+      });
 
-      await transporter.sendMail(mailOptions);
+      await transporter.sendMail({
+        from: DEFAULT_FROM,
+        to,
+        subject,
+        html,
+      });
       console.log("Reply email sent successfully to:", to);
       return true;
     } catch (error) {

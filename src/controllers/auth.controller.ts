@@ -19,7 +19,9 @@ export class AuthController {
   // Register new admin user
   static async register(req: Request, res: Response) {
     try {
-      const { username, email, password, confirmPassword } = req.body;
+      const { username, full_name, email, password, confirmPassword } =
+        req.body;
+      const finalUsername = username || full_name;
 
       // Validate input
       if (!username || !email || !password || !confirmPassword) {
@@ -50,7 +52,7 @@ export class AuthController {
         const db = getDbPool();
         const result = await db.query(
           "SELECT * FROM admin_users WHERE email = $1 OR username = $2",
-          [email, username],
+          [email, finalUsername],
         );
         userExists = result.rows.length > 0;
       } else {
@@ -78,14 +80,14 @@ export class AuthController {
           `INSERT INTO admin_users (username, email, password_hash, is_verified, is_active)
            VALUES ($1, $2, $3, $4, $5)
            RETURNING id, username, email, is_verified, created_at`,
-          [username, email, passwordHash, false, true],
+          [finalUsername, email, passwordHash, false, true],
         );
         newUser = result.rows[0];
       } else {
         // In-memory fallback
         const user = {
           id: inMemoryAdminUsers.length + 1,
-          username,
+          finalUsername,
           email,
           password: password, // Store plain text in development
           is_verified: false,
@@ -102,10 +104,13 @@ export class AuthController {
       }
 
       // Send welcome email
-      await EmailService.sendWelcomeEmail(email, username);
+      await EmailService.sendWelcomeEmail(email, finalUsername);
 
       // Send OTP for verification
-      const otpResult = await OTPService.sendOTP(email, username);
+      const otpResult = await OTPService.sendVerificationOTP(
+        email,
+        finalUsername,
+      );
 
       return res.status(201).json({
         success: true,
@@ -215,7 +220,10 @@ export class AuthController {
       }
 
       // Send new OTP
-      const otpResult = await OTPService.sendOTP(email, user.username);
+      const otpResult = await OTPService.sendVerificationOTP(
+        email,
+        user.username,
+      );
 
       if (!otpResult.success) {
         return res.status(500).json({
@@ -308,7 +316,7 @@ export class AuthController {
       }
 
       // Generate and send OTP for login
-      const otpResult = await OTPService.sendOTP(email, user.username);
+      const otpResult = await OTPService.sendLoginOTP(email, user.username);
 
       if (!otpResult.success) {
         return res.status(500).json({
@@ -466,7 +474,7 @@ export class AuthController {
       }
 
       // Send new OTP
-      const otpResult = await OTPService.sendOTP(email, username);
+      const otpResult = await OTPService.sendLoginOTP(email, username);
 
       if (!otpResult.success) {
         return res.status(500).json({

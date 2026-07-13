@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
@@ -20,6 +21,7 @@ const app: Application = express();
 const PORT: number = 3004;
 
 // Middleware
+app.use(cookieParser());
 app.use(express.json());
 
 // CORS for development
@@ -67,7 +69,6 @@ app._router.stack.forEach((layer: any) => {
 });
 
 app.post("/api/announcements-test", (req, res) => {
-  console.log("✅ Test route hit!");
   res.json({
     success: true,
     message: "Test route is working!",

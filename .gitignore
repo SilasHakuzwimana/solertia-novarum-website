@@ -11,3 +11,5 @@ docker-compose.yml
 
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+docker_solertia_commands.txt
