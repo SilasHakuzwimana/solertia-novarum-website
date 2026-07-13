@@ -1,5 +1,7 @@
+// src/services/email.service.ts
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { Resend } from "resend";
 
 dotenv.config();
 
@@ -8,14 +10,23 @@ const COMPANY_DOMAIN = "solertianovarum.com";
 const SUPPORT_EMAIL = process.env.EMAIL_SUPPORT || `support@${COMPANY_DOMAIN}`;
 const DASHBOARD_URL =
   process.env.ADMIN_DASHBOARD_URL || "http://localhost:3004/admin";
-const LOGIN_URL = process.env.ADMIN_LOGIN_URL || `${DASHBOARD_URL}/login`;
+const LOGIN_URL = process.env.ADMIN_LOGIN_URL || `${DASHBOARD_URL}`;
 
+// ============================================
+// RESEND CONFIGURATION
+// ============================================
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.EMAIL_FROM || `noreply@${COMPANY_DOMAIN}`;
+
+// ============================================
+// NODEMAILER (GMAIL) CONFIGURATION
+// ============================================
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASS;
 
 if (!EMAIL_USER || !EMAIL_PASSWORD) {
   console.warn(
-    "[EmailService] EMAIL_USER / EMAIL_PASSWORD are not set. Email sending will fail until these are configured in your environment.",
+    "[EmailService] EMAIL_USER / EMAIL_PASSWORD are not set. Gmail sending will fail until configured.",
   );
 }
 
@@ -27,6 +38,10 @@ const transporter = nodemailer.createTransport({
     user: EMAIL_USER,
     pass: EMAIL_PASSWORD,
   },
+  // Add timeout settings
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000,
 });
 
 const DEFAULT_FROM =
@@ -194,8 +209,7 @@ function renderLayout(opts: {
         <p>&copy; ${year} ${COMPANY_NAME}. All rights reserved. This is an automated message — please do not reply.</p>
       </div>
     </div>
-  </div>
-</body>
+  </body>
 </html>`;
 }
 
@@ -212,6 +226,81 @@ function otpBlock(otp: string): string {
 type OtpPurpose = "verification" | "login" | "password-reset";
 
 export class EmailService {
+  /**
+   * Try sending via Gmail first, fallback to Resend if Gmail fails.
+   * This ensures maximum deliverability.
+   */
+  private static async sendWithFallback(
+    mailOptions: {
+      to: string;
+      subject: string;
+      html: string;
+      attachments?: Array<{
+        filename: string;
+        content: string | Buffer;
+        contentType: string;
+      }>;
+    },
+    useResend: boolean = false,
+  ): Promise<boolean> {
+    // Try Gmail first (if not explicitly told to skip)
+    if (!useResend && EMAIL_USER && EMAIL_PASSWORD) {
+      try {
+        console.log(`📧 Attempting to send via Gmail to: ${mailOptions.to}`);
+
+        const result = await transporter.sendMail({
+          from: DEFAULT_FROM,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+          attachments: mailOptions.attachments,
+        });
+
+        console.log(`✅ Email sent via Gmail: ${result.messageId}`);
+        return true;
+      } catch (gmailError: any) {
+        console.warn(
+          `⚠️ Gmail failed (${gmailError.code || gmailError.message}), falling back to Resend...`,
+        );
+
+        // Check if Resend API key is available
+        if (!process.env.RESEND_API_KEY) {
+          console.error("❌ Resend API key not configured. Email not sent.");
+          return false;
+        }
+      }
+    }
+
+    // Try Resend as fallback
+    try {
+      console.log(`📧 Attempting to send via Resend to: ${mailOptions.to}`);
+
+      const fromAddress = process.env.RESEND_FROM_EMAIL || FROM_EMAIL;
+      const result = await resend.emails.send({
+        from: `Solertia Novarum <${fromAddress}>`,
+        to: [mailOptions.to],
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+        attachments: mailOptions.attachments?.map((att) => ({
+          filename: att.filename,
+          content: att.content,
+          contentType: att.contentType,
+        })),
+      });
+
+      if (result.error) {
+        console.error(`❌ Resend API error:`, result.error);
+        return false;
+      }
+
+      console.log(`✅ Email sent via Resend: ${result.data.id}`);
+      return true;
+    } catch (resendError) {
+      console.error(`❌ Both Gmail and Resend failed:`, resendError);
+      return false;
+    }
+  }
+
   // ---------------------------------------------------------------------
   // 1. Registration Welcome Email
   // ---------------------------------------------------------------------
@@ -241,13 +330,11 @@ export class EmailService {
         `,
       });
 
-      await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to: email,
         subject: `Welcome to the ${COMPANY_NAME} admin dashboard`,
         html,
       });
-      return true;
     } catch (error) {
       console.error("Failed to send welcome email:", error);
       return false;
@@ -277,14 +364,11 @@ export class EmailService {
         `,
       });
 
-      const info = await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to: email,
         subject: `${otp} is your ${COMPANY_NAME} verification code`,
         html,
       });
-      console.log("Verification OTP email sent:", info.messageId);
-      return true;
     } catch (error) {
       console.error("Failed to send verification OTP email:", error);
       return false;
@@ -314,14 +398,11 @@ export class EmailService {
         `,
       });
 
-      const info = await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to: email,
         subject: `${otp} is your ${COMPANY_NAME} sign-in code`,
         html,
       });
-      console.log("Login OTP email sent:", info.messageId);
-      return true;
     } catch (error) {
       console.error("Failed to send login OTP email:", error);
       return false;
@@ -353,14 +434,11 @@ export class EmailService {
         `,
       });
 
-      const info = await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to: email,
         subject: `${otp} is your ${COMPANY_NAME} password reset code`,
         html,
       });
-      console.log("Password reset OTP email sent:", info.messageId);
-      return true;
     } catch (error) {
       console.error("Failed to send password reset OTP email:", error);
       return false;
@@ -416,13 +494,11 @@ export class EmailService {
         `,
       });
 
-      await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to: email,
         subject: `Password reset confirmed — ${COMPANY_NAME}`,
         html,
       });
-      return true;
     } catch (error) {
       console.error("Failed to send password reset confirmation:", error);
       return false;
@@ -457,15 +533,12 @@ export class EmailService {
         `,
       });
 
-      await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to,
         subject,
         html,
         attachments,
       });
-      console.log("Report email sent successfully to:", to);
-      return true;
     } catch (error) {
       console.error("Failed to send report email:", error);
       return false;
@@ -493,14 +566,11 @@ export class EmailService {
         `,
       });
 
-      await transporter.sendMail({
-        from: DEFAULT_FROM,
+      return await this.sendWithFallback({
         to,
         subject,
         html,
       });
-      console.log("Reply email sent successfully to:", to);
-      return true;
     } catch (error) {
       console.error("Failed to send reply email:", error);
       return false;
